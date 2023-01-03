@@ -4,6 +4,7 @@ Example script that scrapes data from the IEM ASOS download service
 from __future__ import print_function
 import time
 from datetime import datetime
+import math
 import re
 
 # Python 2 and 3: alternative 4
@@ -47,7 +48,7 @@ def download_data(uri):
 
 
 def get_stations_from_filelist(filename):
-    """Build a listing of stations from a simple file listing the stations.
+    """Build a listing of stations.txt from a simple file listing the stations.txt.
 
     The file should simply have one station per line.
     """
@@ -60,17 +61,32 @@ def get_stations_from_filelist(filename):
         x = x.replace('(', '').replace(')', '').replace(',', '').replace("'", '')
         id_time = re.split(r'\s', x)
         stations_time.append(id_time)
-    print(stations_time)
     return stations_time
 
 
-def main():
+def list_slices(data):
+    """ break up the list of stations into chunks due to sys limits
+
+    :param x: list of stations and times
+    :return: list of lists as chunks of original list
+    """
+    slices = []
+    for x in range(len(data)):
+        if x % 120 == 0:
+            start_index = x - 120
+            end_index = x
+            if start_index >= 0:
+                slice = data[start_index: end_index]
+                slices.append(slice)
+    return slices
+
+
+def main(station_list):
     """Our main function"""
+
     service = SERVICE + "data=all&tz=Etc/UTC&format=comma&latlon=yes&"
 
-    # Two examples of how to specify a list of stations
-    stations_time = get_stations_from_filelist("stations2.txt")
-    for x in stations_time:
+    for x in station_list:
         # timestamps in UTC to request data for
         startts = datetime.strptime(x[1], '%Y%m%d%H%M')
         endts = datetime.strptime(x[1], '%Y%m%d%H%M')
@@ -84,4 +100,13 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    stations = get_stations_from_filelist("stations.txt")
+    data_chunks = list_slices(stations)
+    chunk_count = 0
+    for x in data_chunks:
+        main(x)
+        chunk_count += 1
+        print(f'chunk {chunk_count} complete')
+        time.sleep(5)
+
+
