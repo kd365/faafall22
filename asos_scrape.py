@@ -88,8 +88,11 @@ def main(station_list):
 
     for x in station_list:
         # timestamps in UTC to request data for
-        startts = datetime.strptime(x[1], '%Y%m%d%H%M')
-        endts = datetime.strptime(x[1], '%Y%m%d%H%M')
+        try:
+            startts = datetime.strptime(x[1], '%Y%m%d%H%M')
+            endts = datetime.strptime(x[1], '%Y%m%d%H%M')
+        except Exception:
+            pass
         service += startts.strftime("year1=%Y&month1=%m&day1=%d&")
         service += endts.strftime("year2=%Y&month2=%m&day2=%d&")
         uri = "%s&station=%s" % (service, x[0])
@@ -100,7 +103,7 @@ def main(station_list):
 
 
 if __name__ == "__main__":
-    stations = get_stations_from_filelist("stations.txt")
+    stations = get_stations_from_filelist("station_clean.txt")
     data_chunks = list_slices(stations)
     chunk_count = 0
     for x in data_chunks:
